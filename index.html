@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasir Bakso Langen Pabuaran</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Header & Navigasi -->
+    <header class="no-print">
+        <div class="brand">
+            <div class="brand-logo">🥣</div>
+            <div>
+                <h1>Bakso Langen Pabuaran</h1>
+                <p>Sistem Kasir POS & Database Laporan</p>
+            </div>
+        </div>
+        <nav class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('pos')">🛒 Kasir (POS)</button>
+            <button class="tab-btn" onclick="switchTab('history')">📜 Riwayat Transaksi</button>
+            <button class="tab-btn" onclick="switchTab('report')">📊 Laporan Penjualan</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- TAB KASIR (POS) -->
+        <section id="tab-pos" class="tab-content active no-print">
+            <div class="pos-layout">
+                <!-- Area Katalog Menu -->
+                <div class="menu-container">
+                    <div class="filter-bar">
+                        <button class="cat-chip active" onclick="filterCategory('all')">Semua Menu</button>
+                        <button class="cat-chip" onclick="filterCategory('makanan')">Bakso / Makanan</button>
+                        <button class="cat-chip" onclick="filterCategory('minuman')">Minuman</button>
+                        <button class="cat-chip" onclick="filterCategory('pelengkap')">Pelengkap</button>
+                    </div>
+                    <div class="menu-grid" id="menu-grid"></div>
+                </div>
+
+                <!-- Area Keranjang Kasir -->
+                <div class="cart-container">
+                    <div class="cart-header">
+                        <h3>Pesanan Aktif</h3>
+                        <button class="btn-clear" onclick="clearCart()">Kosongkan</button>
+                    </div>
+
+                    <div class="cart-body" id="cart-items"></div>
+
+                    <div class="cart-footer">
+                        <div class="summary-row total">
+                            <span>TOTAL BAYAR:</span>
+                            <span id="cart-total-text">Rp 0</span>
+                        </div>
+                        <button class="btn-pay" onclick="openPaymentModal()">PROSES PEMBAYARAN ➔</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB RIWAYAT TRANSAKSI -->
+        <section id="tab-history" class="tab-content no-print">
+            <div class="page-container">
+                <div class="filter-card">
+                    <h3>Filter Riwayat Pesanan</h3>
+                    <div class="filter-inputs">
+                        <input type="date" id="history-date" onchange="loadHistoryData()">
+                        <button class="btn-secondary" onclick="resetHistoryFilter()">Hari Ini</button>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="app-table">
+                        <thead>
+                            <tr>
+                                <th>No. Nota</th>
+                                <th>Waktu</th>
+                                <th>Detail Pesanan</th>
+                                <th>Metode</th>
+                                <th>Total</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB LAPORAN & CETAK PDF -->
+        <section id="tab-report" class="tab-content">
+            <div class="page-container">
+                <!-- Control Bar (Disembunyikan saat di-print) -->
+                <div class="report-controls no-print">
+                    <div class="date-range-picker">
+                        <div class="input-group">
+                            <label>Dari Tanggal:</label>
+                            <input type="date" id="report-start-date">
+                        </div>
+                        <div class="input-group">
+                            <label>Sampai Tanggal:</label>
+                            <input type="date" id="report-end-date">
+                        </div>
+                        <button class="btn-primary" onclick="loadReportData()">🔍 Tampilkan Laporan</button>
+                    </div>
+                    <button class="btn-print" onclick="window.print()">🖨️ Cetak / Download PDF</button>
+                </div>
+
+                <!-- Dokumen Cetak PDF (Bergaris & Rapi) -->
+                <div id="print-area" class="print-document">
+                    <div class="print-header">
+                        <h2>WARUNG BAKSO LANGEN PABUARAN</h2>
+                        <p>Jl. Raya Pabuaran, Purwokerto Utara, Banyumas</p>
+                        <hr class="header-line">
+                        <h3 style="margin-top: 10px;">LAPORAN PENJUALAN PENJUALAN</h3>
+                        <p id="print-period-text">Periode: -</p>
+                    </div>
+
+                    <!-- Ringkasan KPI -->
+                    <div class="kpi-grid no-print-flex">
+                        <div class="kpi-card">
+                            <span>TOTAL OMZET</span>
+                            <h4 id="kpi-total-omzet">Rp 0</h4>
+                        </div>
+                        <div class="kpi-card">
+                            <span>TOTAL TRANSAKSI</span>
+                            <h4 id="kpi-total-tx">0 Nota</h4>
+                        </div>
+                        <div class="kpi-card">
+                            <span>PORSI TERJUAL</span>
+                            <h4 id="kpi-total-items">0 Porsi</h4>
+                        </div>
+                    </div>
+
+                    <h4 class="section-title">1. Ringkasan Penjualan Per Menu</h4>
+                    <table class="bordered-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">No</th>
+                                <th>Nama Menu / Barang</th>
+                                <th>Harga Satuan</th>
+                                <th>Jumlah Terjual</th>
+                                <th>Total Pendapatan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-summary-table"></tbody>
+                    </table>
+
+                    <h4 class="section-title" style="margin-top: 25px;">2. Rincian Nota Transaksi</h4>
+                    <table class="bordered-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Waktu</th>
+                                <th style="width: 15%;">No. Nota</th>
+                                <th>Detail Barang (Qty)</th>
+                                <th style="width: 12%;">Metode</th>
+                                <th style="width: 15%;">Total Bayar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-detail-table"></tbody>
+                    </table>
+
+                    <div class="print-footer">
+                        <div class="signature-box">
+                            <p>Kasir Operational,</p>
+                            <br><br><br>
+                            <p>( .................................... )</p>
+                        </div>
+                        <div class="signature-box">
+                            <p>Pemilik Warung,</p>
+                            <br><br><br>
+                            <p>( Bakso Langen Pabuaran )</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL PEMBAYARAN -->
+    <div class="modal-overlay" id="payment-modal">
+        <div class="modal-box">
+            <h3>Pembayaran Kasir</h3>
+            <div class="modal-total-display">
+                <span>Total Tagihan:</span>
+                <h2 id="modal-total-text">Rp 0</h2>
+            </div>
+
+            <div class="payment-methods">
+                <button class="pay-method-btn active" onclick="setPaymentMethod('TUNAI')">💵 Tunai</button>
+                <button class="pay-method-btn" onclick="setPaymentMethod('QRIS')">📱 QRIS</button>
+            </div>
+
+            <div id="cash-payment-section">
+                <label>Nominal Tunai Diterima:</label>
+                <div class="quick-cash-grid">
+                    <button type="button" onclick="setQuickCash(10000)">10k</button>
+                    <button type="button" onclick="setQuickCash(20000)">20k</button>
+                    <button type="button" onclick="setQuickCash(50000)">50k</button>
+                    <button type="button" onclick="setQuickCash(100000)">100k</button>
+                    <button type="button" onclick="setExactCash()">Uang Pas</button>
+                </div>
+                <input type="number" id="cash-input" placeholder="Masukkan Nominal Tunai" oninput="calculateChange()">
+
+                <div class="change-display">
+                    <span>Kembalian:</span>
+                    <strong id="change-text">Rp 0</strong>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closePaymentModal()">Batal</button>
+                <button class="btn-confirm" onclick="processTransaction()">Selesai & Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
